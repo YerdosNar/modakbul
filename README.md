@@ -6,7 +6,7 @@
 
 ---
 
-[English] | [**한국어**](/README.ko.md)
+[English] | [**한국어**](/README.kr.md)
 
 ---
 
