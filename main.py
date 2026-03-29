@@ -66,6 +66,7 @@ def login_user(
 
     return {"message": "Login successfull", "user_id": target_user["id"]}
 
+# TOPIC START
 @app.post("/topics", response_model=schemas.TopicResponse, status_code=HTTP_201_CREATED)
 def create_topic(
     topic: schemas.TopicCreate,
@@ -105,8 +106,66 @@ def create_topic(
 
     return new_topic
 
-@app.get("/topic", response_model=list[schemas.TopicResponse])
+@app.get("/topics", response_model=list[schemas.TopicResponse])
 def get_active_topics(db: dict = Depends(get_db)):
     # For now, return all the topics
     # TODO: Later filter the expired topics
     return list(db["topics"].values())
+# TOPIC END
+
+# COMMENT START
+@app.post("/topics/{topic_id}/comments", response_model=schemas.CommentResponse, status_code=HTTP_201_CREATED)
+def create_comment(
+    topic_id: str,
+    comment: schemas.CommentCreate,
+    owner_id: str,
+    db: dict = Depends(get_db)
+):
+    try:
+        user_uuid = UUID(owner_id)
+        topic_uuid = UUID(topic_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid UUID format")
+
+    if user_uuid not in db["users"]:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if topic_uuid not in db["topics"]:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+
+    target_topic = db["topics"][topic_uuid]
+
+    if datetime.now(timezone.utc) > target_topic["ttl"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This campfire has burned out. No new comments allowed.")
+
+    new_comment_id = uuid4()
+    new_comment = {
+        "id": new_comment_id,
+        "owner_id": user_uuid,
+        "topic_id": topic_uuid,
+        "content": comment.content
+    }
+
+    target_topic["total_comment_number"] += 1
+    target_topic["ttl"] += timedelta(minutes=1)
+
+    db["comments"][new_comment_id] = new_comment
+
+    return new_comment
+
+@app.get("/topics/{topic_id}/comments", response_model=list[schemas.CommentResponse])
+def get_topic_comments(
+    topic_id: str,
+    db: dict = Depends(get_db)
+):
+    try:
+        topic_uuid = UUID(topic_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid UUID format")
+
+    if topic_uuid not in db["topics"]:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+
+    topic_comments = [c for c in db["comments"].values() if c["topic_id"] == topic_uuid]
+
+    return topic_comments
