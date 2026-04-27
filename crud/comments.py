@@ -3,7 +3,7 @@
 from schemas.comments import CommentCreate
 from core.exceptions import TopicNotFoundException, TopicAlreadyExpiredException
 from db.connection import get_db_connection
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> dict:
     """ 살아있는 모닥불에 새로운 장작(Comment)을 추가하고 수명을 연장합니다.
@@ -21,11 +21,11 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
         TopicNotFoundException: 해당 ID의 모닥불의 DB에 존재하지 않을 경우 발생
         TopicAlreadyExpiredException: 모닥불이 이미 수명을 다하여 꺼진 경우 발생
     """
-    
-    
+
+
     """
     TODO: [?] SYS-07 장작 추가 및 가변 연소율 시간 연장 (트랜잭션 필수)
-    
+
     with get_db_connection() as conn:
         cursor = conn.cursor()
         # 1. 모닥불이 살아있는지, 현재 장작(comment_count)이 몇 개인지 SELECT
@@ -40,8 +40,6 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
             raise e
         # 5. 방금 달린 댓글 정보 반환
     """
-
-
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
