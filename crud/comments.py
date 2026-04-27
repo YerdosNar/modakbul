@@ -63,7 +63,7 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
         comment_count = topic["comment_count"]
 
         # 2. 이미 꺼진 모닥불인지 확인
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if expires_at <= now:
             raise TopicAlreadyExpiredException()
 
