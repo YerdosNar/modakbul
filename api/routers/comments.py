@@ -21,6 +21,8 @@ def add_comment_to_topic(
     comment_data: CommentCreate,
     user_id: int = Depends(get_current_user)
 ):
+
+
     """살아있는 모닥불에 장작(댓글)을 추가하여 수명을 연장합니다.
 
     JWT 토큰을 통해 인증된 사용자만 접근할 수 있습니다.
@@ -47,4 +49,4 @@ def add_comment_to_topic(
     (주의 2: 존재하지 않거나 꺼진 모닥불에 대한 예외 처리도 CRUD에서 에러를 던져주므로,
             try-except 없이 함수 호출 후 그대로 리턴하면 됨.)
     """
-    pass
+return crud.comments.create_comment(topic_id, comment_data, user_id)
