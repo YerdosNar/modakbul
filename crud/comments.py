@@ -3,6 +3,7 @@
 from schemas.comments import CommentCreate
 from core.exceptions import TopicNotFoundException, TopicAlreadyExpiredException
 from db.connection import get_db_connection
+from datetime import datetime, timedelta
 
 def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> dict:
     """ 살아있는 모닥불에 새로운 장작(Comment)을 추가하고 수명을 연장합니다.
@@ -39,9 +40,7 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
             raise e
         # 5. 방금 달린 댓글 정보 반환
     """
-    from datetime import datetime, timedelta
 
-def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> dict:
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
