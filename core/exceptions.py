@@ -57,13 +57,8 @@ class InvalidCommentContentException(ModakbulException):
 
 
 # setting
-class ModakbulException(Exception):
-    def __init__(self, status_code: int, detail: str):
-        self.status_code = status_code
-        self.detail = detail
-
 class ConfigException(ModakbulException):
-    def __init__(self, detail: str):
+    def __init__(self, detail: str = "System Configuration Error"):
         super().__init__(status_code=500, detail=detail)
 
 class MissingEnvVarError(ConfigException):
@@ -75,5 +70,5 @@ class InvalidVarTypeError(ConfigException):
         super().__init__(detail=f"변수 타입 데이터 불일치: {var_name}")
 
 class ResourceAccessError(ConfigException):
-    def __init__(self, message: str):
+    def __init__(self, message: str = "DB 연결 실패"):
         super().__init__(detail=message)

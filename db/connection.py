@@ -24,7 +24,7 @@ from core.exceptions import ResourceAccessError
 
 def check_db_connection(db_url: str):
     try:
-        # sqlite:/// 삭제 후 경로만 추출
+        # sqlite:///./modakbul.db에서 경로만 추출
         db_path = db_url.replace("sqlite:///", "")
         conn = sqlite3.connect(db_path)
         conn.execute("SELECT 1")

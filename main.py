@@ -37,15 +37,12 @@ def root():
 
 #setting
 import sys
-from fastapi import FastAPI
-from core.config import load_settings
+from core.config import settings
 from db.connection import check_db_connection
 from core.exceptions import ConfigException
 
-app = FastAPI()
-
 try:
-    settings = load_settings()
+    # 서버 가동 전 DB 연결 확인
     check_db_connection(settings.DATABASE_URL)
     print("✅ 서버 가동 준비 완료")
 except ConfigException as e:
