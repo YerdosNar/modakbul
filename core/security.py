@@ -6,9 +6,9 @@ from core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# SECRET_KEY = "your-secret-key"
-# ALGORITHM = "HS256"
-# ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 def get_password_hash(password: str) -> str:
     """평문 비밀번호를 단방향 암호화(해싱)하여 반환합니다.
@@ -61,6 +61,6 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     
     # 3. SECRET_KEY와 HS256 알고리즘을 사용해 토큰 생성 후 반환
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     return encoded_jwt
