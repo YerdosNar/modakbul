@@ -25,7 +25,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username VARCHAR({USERNAME_LENGTH_MAX}) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
-            nickname VARCHAR({NICKNAME_LENGTH_MAX}) NOT NULL,
+            nickname VARCHAR({NICKNAME_LENGTH_MAX}) UNIQUE NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """

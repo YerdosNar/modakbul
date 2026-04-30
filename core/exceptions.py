@@ -11,8 +11,18 @@ class ModakbulException(HTTPException):
 # =============================
 
 class UserAlreadyExistsException(ModakbulException):
-    """ 이미 존재하는 유저일 때 발생하는 예외 """
+    """ 이미 존재하는 user 정보로 회원가입을 시도할 때 발생하는 예외 """
     def __init__(self, detail: str = "이미 존재하는 ID입니다."):
+        super().__init__(status_code=409, detail=detail)
+
+class UsernameAlreadyExistsException(ModakbulException):
+    """ 이미 존재하는 username으로 회원가입을 시도할 때 발생하는 예외 """
+    def __init__(self, detail: str = "이미 존재하는 ID입니다."):
+        super().__init__(status_code=409, detail=detail)
+
+class NicknameAlreadyExistsException(ModakbulException):
+    """ 이미 존재하는 nickname으로 회원가입을 시도할 때 발생하는 예외 """
+    def __init__(self, detail: str = "이미 존재하는 Nickname입니다."):
         super().__init__(status_code=409, detail=detail)
 
 class UserNotFoundException(ModakbulException):
