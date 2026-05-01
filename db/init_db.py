@@ -4,8 +4,6 @@ import sqlite3
 import os
 from core.config import settings
 
-DB_FILENAME = "modakbul.db"
-
 # USERNAME_LENGTH_MAX = 31
 # NICKNAME_LENGTH_MAX = 31
 # TOPIC_LENGTH_MAX = 127
@@ -17,7 +15,7 @@ def init_db():
     print(path)
     os.makedirs(path, exist_ok=True)
 
-    conn = sqlite3.connect(DB_FILENAME)
+    conn = sqlite3.connect(settings.DB_FILENAME)
     cursor = conn.cursor()
 
     # 1. [Users] Table 
