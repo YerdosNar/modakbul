@@ -3,11 +3,12 @@
 
 import math
 from datetime import datetime, timedelta
+from core.config import settings
 
-# 모닥불 상수
-BASE_MINUTES = 10.0
-DECAY_RATE = 0.90
-MAX_LIFESPAN_HOURS = 24
+# 모닥불 상수 선언
+# BASE_MINUTES = 10.0
+# DECAY_RATE = 0.90
+# MAX_LIFESPAN_HOURS = 24
 
 def calculate_extension_minutes(comment_count: int) -> int:
     """현재 장작(댓글) 개수를 기반으로 연장할 시간(분)을 계산합니다.
@@ -19,7 +20,7 @@ def calculate_extension_minutes(comment_count: int) -> int:
         int: 연장할 시간(분)
     
     """
-    return max(1, math.ceil(BASE_MINUTES * (DECAY_RATE ** comment_count)))
+    return max(1, math.ceil(settings.BASE_MINUTES * (settings.DECAY_RATE ** comment_count)))
 
 def get_new_expires_at(
         created_at: datetime,
@@ -40,7 +41,7 @@ def get_new_expires_at(
     new_expires_at = current_expires_at + timedelta(minutes=extend_minutes)
 
     # 최대 수명 제한
-    max_possible_time = created_at + timedelta(hours=MAX_LIFESPAN_HOURS)
+    max_possible_time = created_at + timedelta(hours=settings.MAX_LIFESPAN_HOURS)
 
     # 계산된 시간과 최대 수명 중 더 짧은 시간을 반환
     return min(new_expires_at, max_possible_time)

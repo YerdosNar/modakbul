@@ -2,11 +2,13 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
+from core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 def get_password_hash(password: str) -> str:
     """평문 비밀번호를 단방향 암호화(해싱)하여 반환합니다.
