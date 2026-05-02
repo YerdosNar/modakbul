@@ -64,3 +64,21 @@ class InvalidTopicContentException(ModakbulException):
 class InvalidCommentContentException(ModakbulException):
     def __init__(self):
         super().__init__(status_code=422, detail="장작의 내용이 비어있거나 너무 깁니다.")
+
+
+# setting
+class ConfigException(ModakbulException):
+    def __init__(self, detail: str = "System Configuration Error"):
+        super().__init__(status_code=500, detail=detail)
+
+class MissingEnvVarError(ConfigException):
+    def __init__(self, var_name: str):
+        super().__init__(detail=f"필수 환경 변수 누락: {var_name}")
+
+class InvalidVarTypeError(ConfigException):
+    def __init__(self, var_name: str):
+        super().__init__(detail=f"변수 타입 데이터 불일치: {var_name}")
+
+class ResourceAccessError(ConfigException):
+    def __init__(self, message: str = "DB 연결 실패"):
+        super().__init__(detail=message)

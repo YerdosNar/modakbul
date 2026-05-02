@@ -17,3 +17,17 @@ def get_db_connection():
         yield conn
     finally:
         conn.close()
+
+#setting
+import sqlite3
+from core.exceptions import ResourceAccessError
+
+def check_db_connection(db_url: str):
+    try:
+        # sqlite:///./modakbul.db에서 경로만 추출
+        db_path = db_url.replace("sqlite:///", "")
+        conn = sqlite3.connect(db_path)
+        conn.execute("SELECT 1")
+        conn.close()
+    except Exception as e:
+        raise ResourceAccessError(f"DB 연결 실패: {str(e)}")

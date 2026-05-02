@@ -2,13 +2,12 @@
 
 import sqlite3
 import os
+from core.config import settings
 
-DB_FILENAME = "modakbul.db"
-
-USERNAME_LENGTH_MAX = 31
-NICKNAME_LENGTH_MAX = 31
-TOPIC_LENGTH_MAX = 127
-COMMENT_LENGTH_MAX = 1023
+# USERNAME_LENGTH_MAX = 31
+# NICKNAME_LENGTH_MAX = 31
+# TOPIC_LENGTH_MAX = 127
+# COMMENT_LENGTH_MAX = 1023
 
 def init_db():
     """ Initialize Database Table and Index. """
@@ -16,16 +15,16 @@ def init_db():
     print(path)
     os.makedirs(path, exist_ok=True)
 
-    conn = sqlite3.connect(DB_FILENAME)
+    conn = sqlite3.connect(settings.DB_FILENAME)
     cursor = conn.cursor()
 
     # 1. [Users] Table 
     query = f"""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username VARCHAR({USERNAME_LENGTH_MAX}) UNIQUE NOT NULL,
+            username VARCHAR({settings.USERNAME_LENGTH_MAX}) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
-            nickname VARCHAR({NICKNAME_LENGTH_MAX}) UNIQUE NOT NULL,
+            nickname VARCHAR({settings.NICKNAME_LENGTH_MAX}) NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """
@@ -35,7 +34,7 @@ def init_db():
     query = f"""
         CREATE TABLE IF NOT EXISTS topics (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content VARCHAR({TOPIC_LENGTH_MAX}) NOT NULL,
+            content VARCHAR({settings.TOPIC_LENGTH_MAX}) NOT NULL,
             expires_at DATETIME NOT NULL,
             comment_count INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -50,7 +49,7 @@ def init_db():
     query = f"""
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content VARCHAR({COMMENT_LENGTH_MAX}) NOT NULL,
+            content VARCHAR({settings.COMMENT_LENGTH_MAX}) NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             user_id INTEGER,
             topic_id INTEGER,

@@ -34,3 +34,19 @@ def root():
     return {
         "message" : "모닥불(Modakbul) 서버가 활활 타오르고 있습니다."
     }
+
+#setting
+import sys
+from core.config import settings
+from db.connection import check_db_connection
+from core.exceptions import ConfigException
+
+try:
+    check_db_connection(settings.DATABASE_URL)
+    print("✅ 서버 가동 준비 완료")
+except ConfigException as e:
+    print(f"❌ 가동 실패: {e.detail}")
+    sys.exit(1)
+except Exception as e:
+    print(f"❌ 알 수 없는 오류 발생: {str(e)}")
+    sys.exit(1)
