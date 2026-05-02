@@ -3,7 +3,12 @@
 import sqlite3
 from schemas.auth import UserCreate
 from db.connection import get_db_connection
-from core.exceptions import UserAlreadyExistsException, InvalidCredentialsException
+from core.exceptions import (
+    UserAlreadyExistsException,
+    UsernameAlreadyExistsException,
+    NicknameAlreadyExistsException,
+    InvalidCredentialsException
+)
 from core.security import get_password_hash, verify_password
 
 def create_user(user_data: UserCreate) -> dict:
@@ -29,6 +34,22 @@ def create_user(user_data: UserCreate) -> dict:
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
+            # 2-1. username 또는 nickname의 중복을 걸러내기 위해 조회
+            query = "SELECT username, nickname FROM users WHERE username = ? OR nickname = ?"
+            cursor.execute(query, (user_data.username, user_data.nickname))
+            existing_user = cursor.fetchone()
+
+            # 2-2. 중복 발견 시
+            if existing_user:
+
+                # 2-2-1. username 중복 시
+                if existing_user['username'] == user_data.username:
+                    raise UsernameAlreadyExistsException()
+
+                # 2-2-2. nickname 중복 시
+                if existing_user['nickname'] == user_data.nickname:
+                    raise NicknameAlreadyExistsException()
+
             # INSERT 쿼리
             # SQL Injection 방지를 위하여 '?' placeholder 사용
             query = "INSERT INTO users (username, password_hash, nickname) VALUES (?, ?, ?)"
@@ -41,7 +62,7 @@ def create_user(user_data: UserCreate) -> dict:
             new_user_id = cursor.lastrowid
 
     except sqlite3.IntegrityError:
-        # 3. username의 UNIQUE constraint 위배할 경우 발생 (username 중복)
+        # 3. username 또는 nickname의 UNIQUE constraint 위배할 경우 발생 (username 또는 nickname 중복)
         raise UserAlreadyExistsException()
     
     return {
