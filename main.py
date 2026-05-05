@@ -4,19 +4,23 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from db.init_db import init_db
 from api.routers import auth, topics, comments
+from jobs.scheduler import scheduler
 
 # Lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    # 1. Initialize DB file & Table
+    # Initialize Database
     init_db()
 
-    # TODO: Add Scheduler start logics.
+    # Start Garbage Collector
+    scheduler.start()
 
     yield
 
-    # Logic when server shutdown.
+    # Shutdown Garbage Collector
+    scheduler.shutdown()
+
 
 app = FastAPI(
     title="Modakbul API",

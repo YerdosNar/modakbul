@@ -35,6 +35,9 @@ class Settings:
             self.NICKNAME_LENGTH_MAX = int(os.getenv("NICKNAME_LENGTH_MAX", 31))
             self.TOPIC_LENGTH_MAX = int(os.getenv("TOPIC_LENGTH_MAX", 127))
             self.COMMENT_LENGTH_MAX = int(os.getenv("COMMENT_LENGTH_MAX", 1023))
+
+            # Garbage Collection
+            self.GARBAGE_COLLECTION_INTERVAL = int(os.getenv("GARBAGE_COLLECTION_INTERVAL", 3600))
             
         except (ValueError, TypeError):
             raise InvalidVarTypeError("환경 변수 타입 오류: 정수나 실수형 확인 필요")
