@@ -2,7 +2,7 @@
 
 from typing import List
 from fastapi import APIRouter, Depends, Query, status
-from schemas.topics import TopicCreate, TopicResponse
+from schemas.topics import TopicCreate, TopicResponse, TopicDetailResponse
 from api.dependencies import get_current_user
 import crud.topics
 
@@ -67,7 +67,7 @@ def read_topic_feed(
 
 @router.get(
         "/{topic_id}",
-        response_model=TopicResponse,
+        response_model=TopicDetailResponse,
         summary="특정 모닥불 상세 조회")
 def get_topic_detail(topic_id: int):
     """특정 모닥불의 상세 내용을 조회합니다.

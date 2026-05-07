@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel
 from datetime import datetime
+from typing   import List
+from schemas.comments import CommentResponse
 
 class TopicCreate(BaseModel):
     content: str
@@ -13,3 +15,6 @@ class TopicResponse(BaseModel):
     comment_count: int
     created_at: datetime
     user_id: int
+
+class TopicDetailResponse(TopicResponse):
+    comments: List[CommentResponse]

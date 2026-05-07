@@ -142,21 +142,32 @@ def get_topic_detail(topic_id: int) -> Optional[dict]:
         cursor = conn.cursor()
 
         # Find topic by ID
-        query = "SELECT * FROM topics WHERE id = ?"
-        cursor.execute(query, (topic_id, ))
-        row = cursor.fetchone()
+        topic_query = "SELECT * FROM topics WHERE id = ?"
+        cursor.execute(topic_query, (topic_id, ))
+        topic_row = cursor.fetchone()
 
-    # If not found -> ERROR 404
-    if row is None:
-        raise TopicNotFoundException()
+        # If not found -> ERROR 404
+        if topic_row is None:
+            raise TopicNotFoundException()
+
+        comment_query = """
+            SELECT * FROM comments
+            WHERE topic_id = ?
+            ORDER BY created_at ASC
+        """
+        cursor.execute(comment_query, (topic_id, ))
+        comment_rows = cursor.fetchall()
 
     # SQLite datetime ISO saved as string
     # Convert for comparison
-    expires_at_str = row["expires_at"]
+    expires_at_str = topic_row["expires_at"]
     expires_at = datetime.fromisoformat(expires_at_str)
     now = datetime.now(timezone.utc)
 
     if expires_at < now:
         raise TopicAlreadyExpiredException()
 
-    return dict(row)
+    result = dict(topic_row)
+    result["comments"] = [dict(row) for row in comment_rows]
+
+    return result
