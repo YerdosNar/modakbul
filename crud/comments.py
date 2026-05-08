@@ -2,8 +2,9 @@
 
 from schemas.comments import CommentCreate
 from core.exceptions import TopicNotFoundException, TopicAlreadyExpiredException
+from core.burn_rate import get_new_expires_at
 from db.connection import get_db_connection
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> dict:
     """ 살아있는 모닥불에 새로운 장작(Comment)을 추가하고 수명을 연장합니다.
@@ -45,7 +46,7 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
 
         # 1. 모닥불 조회
         cursor.execute("""
-            SELECT id, expires_at, comment_count
+            SELECT id, created_at, expires_at, comment_count
             FROM topics
             WHERE id = ?
         """, (topic_id,))
@@ -56,8 +57,15 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
             raise TopicNotFoundException()
 
         # SQLite → 문자열 datetime 변환
+        created_at = datetime.fromisoformat(topic["created_at"])
         expires_at = datetime.fromisoformat(topic["expires_at"])
         comment_count = topic["comment_count"]
+
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
 
         # 2. 이미 꺼진 모닥불인지 확인
         now = datetime.now(timezone.utc)
@@ -65,16 +73,7 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
             raise TopicAlreadyExpiredException()
 
         # 3. 가변 연소율 계산
-        if comment_count < 10:
-            extend_minutes = 10
-        elif comment_count < 50:
-            extend_minutes = 5
-        elif comment_count < 100:
-            extend_minutes = 3
-        else:
-            extend_minutes = 1
-
-        new_expires_at = expires_at + timedelta(minutes=extend_minutes)
+        new_expires_at = get_new_expires_at(created_at, expires_at, comment_count)
 
         try:
             # 4. 댓글 INSERT
