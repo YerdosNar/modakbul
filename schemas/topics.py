@@ -14,7 +14,7 @@ class TopicResponse(BaseModel):
     expires_at: datetime
     comment_count: int
     created_at: datetime
-    user_id: int
+    user_id: int | None = None
 
 class TopicDetailResponse(TopicResponse):
     comments: List[CommentResponse]
