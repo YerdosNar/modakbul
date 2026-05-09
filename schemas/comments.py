@@ -10,5 +10,5 @@ class CommentResponse(BaseModel):
     id: int
     content: str
     created_at: datetime
-    user_id: int
+    user_id: int | None = None
     topic_id: int
