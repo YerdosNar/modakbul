@@ -31,7 +31,8 @@ def create_topic(topic_data: TopicCreate, user_id: int) -> dict:
 
     # expires_at = now + 1 hour
     # timezone.utc, so the location of server won't matter
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
 
     # DB Connection
     with get_db_connection() as conn:
@@ -41,10 +42,10 @@ def create_topic(topic_data: TopicCreate, user_id: int) -> dict:
         dup_query = """
             SELECT id FROM topics
             WHERE content = ?
-                AND expires_at > datetime('now')
+                AND expires_at > ?
             LIMIT 1
         """
-        cursor.execute(dup_query, (topic_data.content, ))
+        cursor.execute(dup_query, (topic_data.content, now_iso))
         if cursor.fetchone() is not None:
             raise TopicAlreadyExistsException()
 
@@ -93,6 +94,7 @@ def get_active_topics(limit: int = 20, offset: int = 0) -> List[dict]:
     1. SELECT * FROM topics WHERE expires_at > datetime('now') ORDER BY expires_at DESC LIMIT ? OFFSET ?
     2. 결과를 리스트로 묶어서 리턴
     """
+    now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
@@ -100,11 +102,11 @@ def get_active_topics(limit: int = 20, offset: int = 0) -> List[dict]:
         query = """
             SELECT *
             FROM topics
-            WHERE expires_at > datetime('now')
+            WHERE expires_at > ?
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?
         """
-        cursor.execute(query, (limit, offset))
+        cursor.execute(query, (now_iso, limit, offset))
 
         # fetchall (return emtpy list if nothing found)
         rows = cursor.fetchall()
