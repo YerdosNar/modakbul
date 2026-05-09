@@ -2,10 +2,9 @@
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from schemas.auth import UserCreate, TokenResponse
-from crud.auth import create_user, authenticate_user
+from schemas.auth import UserCreate, UserDelete, TokenResponse
+from crud.auth import create_user, authenticate_user, delete_user
 from core.security import create_access_token
-from core.exceptions import UserAlreadyExistsException
 from api.dependencies import get_current_user
 
 
@@ -31,13 +30,7 @@ def signup(user_data: UserCreate):
         UserAlreadyExistsException: (CRUD 내부에서 발생) 이미 존재하는 아이디일 경우 409 반환
     """
 
-    try:
-        new_user = create_user(user_data)
-    except UserAlreadyExistsException as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="이미 존재하는 ID입니다."
-        )
+    new_user = create_user(user_data.username, user_data.password, user_data.nickname)
 
     return {
         "message" : "회원가입이 완료되었습니다.",
@@ -97,6 +90,36 @@ def logout():
         "message" : "로그아웃 되었습니다."
     }
 
+@router.delete(
+        "/me",
+        response_model=dict,
+        summary="현재 로그인한 사용자 삭제",
+        description="현재 로그인한 사용자를 DB에서 삭제합니다."
+)
+def withdraw(user_data: UserDelete, current_user_id: int = Depends(get_current_user)):
+    """현재 로그인한 사용자의 계정을 영구 삭제합니다.
+
+    본인 확인을 위해 비밀번호를 입력받으며, 확인이 완료되면 DB에서 유저를 삭제합니다.
+    (연관된 모닥불 및 장작은 DB의 ON DELETE 제약조건에 따라 처리됨)
+
+    Args:
+        user_data (UserDelete): 클라이언트가 전달한 본인 확인용 비밀번호
+        current_user_id (int): Depends를 통해 주입된 현재 로그인 사용자의 고유 ID
+
+    Returns:
+        dict: 회원 탈퇴 성공 메시지
+
+    Raises:
+        InvalidCredentialException: (CRUD 내부에서 발생) 비밀번호가 틀릴 경우 401 반환
+    """
+    
+    delete_user(user_data.password, current_user_id)
+    
+    return {
+        "message" : "회원 탈퇴가 완료되었습니다."
+    }
+    
+    
 @router.get(
     "/me",
     summary="현재 로그인한 사용자 정보 조회",

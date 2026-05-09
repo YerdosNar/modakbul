@@ -2,6 +2,7 @@
 
 import sqlite3
 from contextlib import contextmanager
+from core.exceptions import ResourceAccessError
 
 DB_FILENAME = "modakbul.db"
 
@@ -13,14 +14,12 @@ def get_db_connection():
     """
     conn = sqlite3.connect(DB_FILENAME)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn
     finally:
         conn.close()
 
-#setting
-import sqlite3
-from core.exceptions import ResourceAccessError
 
 def check_db_connection(db_url: str):
     try:

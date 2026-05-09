@@ -1,23 +1,26 @@
 # 유저 생성, 조회 쿼리
 
 import sqlite3
-from schemas.auth import UserCreate
+from schemas.auth import UserCreate, UserDelete
 from db.connection import get_db_connection
 from core.exceptions import (
     UserAlreadyExistsException,
     UsernameAlreadyExistsException,
     NicknameAlreadyExistsException,
+    UserNotFoundException,
     InvalidCredentialsException
 )
 from core.security import get_password_hash, verify_password
 
-def create_user(user_data: UserCreate) -> dict:
+def create_user(username, password, nickname) -> dict:
     """ 새로운 사용자를 DB에 생성합니다.
 
     입력받은 평문 비밀번호는 내부적으로 단방향 해싱(bcrypt) 처리되어 저장됩니다.
 
     Args:
-        user_data (UserCreate): 가입할 사용자의 정보(username, password, nickname)가 담긴 스키마
+        username (str): 가입할 사용자의 ID
+        password (str): 가입할 사용자의 평문 비밀번호
+        nickname (str): 가입할 사용자의 닉네임
          
     Returns:
         dict: 생성된 사용자의 정보 (password_hash는 제외)
@@ -27,7 +30,7 @@ def create_user(user_data: UserCreate) -> dict:
     """
     
     # 1. 비밀번호 해싱
-    hashed_password = get_password_hash(user_data.password)
+    hashed_password = get_password_hash(password)
 
     # 2. DB Connection 열어서 쿼리를 실행하기
     try:
@@ -36,24 +39,24 @@ def create_user(user_data: UserCreate) -> dict:
 
             # 2-1. username 또는 nickname의 중복을 걸러내기 위해 조회
             query = "SELECT username, nickname FROM users WHERE username = ? OR nickname = ?"
-            cursor.execute(query, (user_data.username, user_data.nickname))
+            cursor.execute(query, (username, nickname))
             existing_user = cursor.fetchone()
 
             # 2-2. 중복 발견 시
             if existing_user:
 
                 # 2-2-1. username 중복 시
-                if existing_user['username'] == user_data.username:
+                if existing_user['username'] == username:
                     raise UsernameAlreadyExistsException()
 
                 # 2-2-2. nickname 중복 시
-                if existing_user['nickname'] == user_data.nickname:
+                if existing_user['nickname'] == nickname:
                     raise NicknameAlreadyExistsException()
 
             # INSERT 쿼리
             # SQL Injection 방지를 위하여 '?' placeholder 사용
             query = "INSERT INTO users (username, password_hash, nickname) VALUES (?, ?, ?)"
-            cursor.execute(query, (user_data.username, hashed_password, user_data.nickname))
+            cursor.execute(query, (username, hashed_password, nickname))
 
             # 변경사항 저장
             conn.commit()
@@ -67,8 +70,8 @@ def create_user(user_data: UserCreate) -> dict:
     
     return {
         "id": new_user_id,
-        "username": user_data.username,
-        "nickname": user_data.nickname
+        "username": username,
+        "nickname": nickname
     }
     
 
@@ -118,3 +121,46 @@ def authenticate_user(username: str, password: str) -> dict:
         "username": db_username,
         "nickname": db_nickname
     }
+
+def delete_user(plain_password: str, user_id: int):
+    """유저 ID와 비밀번호를 검증한 후, DB에서 유저를 영구 삭제합니다.
+
+    Args:
+        password (str): 본인 확인을 위한 평문 비밀번호
+        user_id (int): 삭제할 유저의 고유 ID
+
+    Raises:
+        InvalidCredentialsException: 비밀번호가 일치하지 않을 때 발생
+        UserNotFoundException: 해당 유저가 DB에 없을 때 발생
+    
+    """
+
+    with get_db_connection() as conn:
+        try:
+            cursor = conn.cursor()
+
+            # 1. hashed_password 가져오기
+            query = "SELECT password_hash FROM users WHERE id = ?"
+            cursor.execute(query, (user_id, ))
+            user_record = cursor.fetchone()
+
+            hashed_password = user_record['password_hash']
+
+            # 2. DB에 해당 유저가 없다면 (그럴 일은 없곘지만 혹시)
+            if hashed_password is None:
+                raise UserNotFoundException()
+
+            # 3. plain password와 hashed password 비교
+            if not verify_password(plain_password, hashed_password):
+                raise InvalidCredentialsException()
+            
+            # 4. 유저 삭제
+            query = "DELETE FROM users WHERE id = ?"
+            cursor.execute(query, (user_id, ))
+            conn.commit()
+
+        except Exception as e:
+        
+            conn.rollback()
+            raise e
+        
