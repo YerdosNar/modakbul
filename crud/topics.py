@@ -116,7 +116,7 @@ def get_active_topics(limit: int = 20, offset: int = 0) -> List[dict]:
     return [dict(row) for row in rows]
 
 
-def get_topic_detail(topic_id: int) -> Optional[dict]:
+def get_topic_detail(topic_id: int, limit: int = 20, offset: int = 0) -> Optional[dict]:
     """ 특정 모닥불(Topic)에 대한 상세 정보를 반환합니다.
 
     해당 모닥불이 존재하더라도 이미 수명이 다했다면, 존재하지 않는 것과 동일하게 처리합니다.
@@ -155,9 +155,10 @@ def get_topic_detail(topic_id: int) -> Optional[dict]:
         comment_query = """
             SELECT * FROM comments
             WHERE topic_id = ?
-            ORDER BY created_at ASC
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
         """
-        cursor.execute(comment_query, (topic_id, ))
+        cursor.execute(comment_query, (topic_id, limit, offset))
         comment_rows = cursor.fetchall()
 
     # SQLite datetime ISO saved as string

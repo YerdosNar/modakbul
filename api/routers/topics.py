@@ -69,7 +69,11 @@ def read_topic_feed(
         "/{topic_id}",
         response_model=TopicDetailResponse,
         summary="특정 모닥불 상세 조회")
-def get_topic_detail(topic_id: int):
+def get_topic_detail(
+        topic_id: int,
+        limit: int = Query(20, ge=1, le=100, description="한번에 가져올 댓글 수"),
+        offset: int = Query(0, ge=0, description="건너뛸 댓글 수 (페이지용)")
+):
     """특정 모닥불의 상세 내용을 조회합니다.
 
     해당 ID의 모닥불이 존재하더라도 이미 수명이 다했다면 접근할 수 없습니다.
@@ -90,4 +94,4 @@ def get_topic_detail(topic_id: int):
     1. crud.topics.get_topic_detail(topic_id) 호출 후, 그 반환값을 그대로 리턴
     (참고: 만료되거나 없는 게시물에 대한 404/403 에외 처리는 CRUD에서 던지므로 라우터에서는 호출만 하면 됨.)
     """
-    return crud.topics.get_topic_detail(topic_id)
+    return crud.topics.get_topic_detail(topic_id, limit, offset)
