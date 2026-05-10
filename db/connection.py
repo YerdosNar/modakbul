@@ -3,8 +3,7 @@
 import sqlite3
 from contextlib import contextmanager
 from core.exceptions import ResourceAccessError
-
-DB_FILENAME = "modakbul.db"
+from core.config import settings
 
 @contextmanager
 def get_db_connection():
@@ -12,7 +11,7 @@ def get_db_connection():
     DB connection을 생성하고 관리하는 유틸리티입니다.
     사용법 : with get_db_connection() as conn:
     """
-    conn = sqlite3.connect(DB_FILENAME)
+    conn = sqlite3.connect(settings.DB_FILENAME)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:

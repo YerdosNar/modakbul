@@ -37,7 +37,7 @@ def init_db():
             content VARCHAR({settings.TOPIC_LENGTH_MAX}) NOT NULL,
             expires_at DATETIME NOT NULL,
             comment_count INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME NOT NULL,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
         )
@@ -50,7 +50,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content VARCHAR({settings.COMMENT_LENGTH_MAX}) NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME NOT NULL,
             user_id INTEGER,
             topic_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
