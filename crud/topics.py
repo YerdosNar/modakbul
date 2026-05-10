@@ -56,10 +56,10 @@ def create_topic(topic_data: TopicCreate, user_id: int) -> dict:
         #
         # we need to put 'content, expires_at, user_id'
         insert_query = """
-            INSERT INTO topics (content, expires_at, user_id)
-            VALUES (?, ?, ?)
+            INSERT INTO topics (content, expires_at, created_at, user_id)
+            VALUES (?, ?, ?, ?)
         """
-        cursor.execute(insert_query, (topic_data.content, expires_at, user_id))
+        cursor.execute(insert_query, (topic_data.content, expires_at, now_iso, user_id))
 
         # Last INSERTed row id
         new_topic_id = cursor.lastrowid
