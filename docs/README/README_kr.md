@@ -1,4 +1,4 @@
-# 모닥불 (Modakbul)
+# 🔥 모닥불 (Modakbul)
 
 **2026-Spring Software Engineering Team Project**
 
@@ -10,18 +10,18 @@
 
 | Name | Role & Responsibilities | GitHub Profile |
 | --- | --- | --- |
-| **김건우** | Role 1 / ~ | [Github Profile](https://github.com/goukimesatz) |
-| **나르지기토브 예르도스** | Role 2 / ~ | [Github Profile](https://github.com/YerdosNar) |
-| **전상준** | Role 3 / ~ | [Github Profile](https://github.com/nclsang) |
-| **차경호** | Role 4 / ~ | [Github Profile](https://github.com/Homeria) |
+| **김건우** | comment 기능 개발 | [Github Profile](https://github.com/goukimesatz) |
+| **나르지기토브 예르도스** | topic 기능 개발 | [Github Profile](https://github.com/YerdosNar) |
+| **전상준** | setting 기능 개발 | [Github Profile](https://github.com/nclsang) |
+| **차경호** | auth, garbage-collect 기능 개발 | [Github Profile](https://github.com/Homeria) |
 
 ---
 
 ## 📖 Project Overview
 
-**모닥불 (Modakbul)**는 현재 화제가 되는 이슈에 대해 실시간으로 밀도 있게 소통할 수 있는 익명 커뮤니티 백엔드 API 입니다.
+**모닥불 (Modakbul)**은 현재 화제가 되는 이슈에 대해 실시간으로 밀도 있게 소통할 수 있는 익명 커뮤니티 백엔드 API 입니다.
 
-모든 모닥불(Topic)은 생성 시 기본 1시간의 수명을 부여받습니다. 사용자들이 지속적으로 '장작(Comment)'을 추가하면 가변 연소율 알고리즘에 의해 수명이 조금씩 연장되지만, 사람들의 관심이 식어 수명이 다한 게시물은 데이터베이스에서 영구적으로 자동 소멸됩니다. 이를 통해 언제 접속하든 지금 가장 활발하게 논의되는 신선한 주제만 남게 됩니다.
+모든 모닥불(Topic)은 생성 시 기본 1시간의 수명을 부여받습니다. 사용자들이 지속적으로 '장작(Comment)'을 추가하면 가변 연소율 알고리즘에 의해 수명이 조금씩 연장되지만, 사람들의 관심이 식어 수명이 다한 게시물은 데이터베이스에서 영구적으로 자동 소멸됩니다. 이를 통해 휘발성을 보장하고 언제 접속하든 지금 가장 활발하게 논의되는 신선한 주제만 남게 됩니다.
 
 ---
 
@@ -69,21 +69,21 @@
         - JWT 시크릿 키 및 단방향 암호화(bcrypt) 환경 구성
     - **산출물 (Deliverables):** DB 스키마 생성 스크립트(`init_db.py`), API/CRUD 인터페이스 정의서
         
-- **Milestone 2: 도메인별 API 및 DB 생쿼리 병렬 개발 (Week 3 ~ Week 5)**
+- **Milestone 2: 도메인별 API 및 CRUD 기능 순차 개발 (Week 3 ~ Week 5)**
     - **목표:** Auth, Topics, Comments 도메인의 실제 비즈니스 로직 및 엔드포인트 구현
     - **주요 작업 (Tasks):**
         - **Auth:** 회원가입/로그인 및 JWT 토큰 발급/검증 미들웨어 구현
-        - **Topics:** 모닥불 피우기 로직 및 지연 삭제 필터링(`WHERE expires_at > now()`)이 적용된 피드 조회 생쿼리 구현
+        - **Topics:** 모닥불 피우기 로직 및 지연 삭제 필터링(`WHERE expires_at > now()`)이 적용된 피드 조회 쿼리 구현
         - **Comments:** 단일 트랜잭션을 적용한 장작 추가 및 '가변 연소율' 수명 연장 알고리즘 구현
         - FastAPI 전역 에러 핸들러(Custom Exceptions)를 통한 예외 처리 중앙 집중화
     - **산출물 (Deliverables):** 통합 테스트가 완료된 도메인별 REST API (Swagger UI)
 
 - **Milestone 3: 시스템 통합 및 최종 안정화 (Week 6 ~ Week 7)**
-    - **목표:** 가비지 컬렉터 스케줄러 통합 및 전체 시스템 안정화
+    - **목표:** 중앙 집중형 설정과 가비지 컬렉터 스케줄러 개발 및 전체 시스템 안정화
     - **주요 작업 (Tasks):**
         - 비동기 백그라운드 작업(APScheduler)을 활용한 만료 데이터 물리적 하드 딜리트(`DELETE`) 구현
-        - 조회 성능 향상을 위한 DB 컬럼 인덱스(Index) 최적화
         - 전체 API 엔드포인트 통합 테스트(Integration Test) 진행 및 동시성 이슈 점검
+        - 잠재적 버그 유발 기능 패치
     - **산출물 (Deliverables):** 백그라운드 작업이 통합된 최종 백엔드 API 서버 및 팀 프로젝트 결과 보고서
 	
 ---
