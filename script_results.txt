@@ -1,0 +1,316 @@
+
+--------------------------------------------------
+[signup] - 정상
+
+[Input]
+{'username': 'auth', 'password': '1234', 'nickname': 'feat_auth'}
+
+[Output]
+{
+  "message": "회원가입이 완료되었습니다.",
+  "user": {
+    "id": 1,
+    "username": "auth",
+    "nickname": "feat_auth"
+  }
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[signup] - ID 중복
+
+[Input]
+{'username': 'auth', 'password': '1234', 'nickname': 'feat_auth_2'}
+
+[Output]
+{
+  "detail": "이미 존재하는 ID입니다."
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[signup] - 낙네임 중복
+
+[Input]
+{'username': 'auth_2', 'password': '1234', 'nickname': 'feat_auth'}
+
+[Output]
+{
+  "detail": "이미 존재하는 Nickname입니다."
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[Login] - 정상
+
+[Input]
+{'username': 'auth', 'password': '1234'}
+
+[Output]
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc4Njg0MTkxfQ.92O5T4tB2vgKrW6k3hmo8FpvyVq-9vvybjrh4BFqtIA",
+  "token_type": "bearer"
+}
+--------------------------------------------------
+
+
+
+--------------------------------------------------
+[Login] - 가입한 ID가 아님
+
+[Input]
+{'username': 'unknown', 'password': '1234'}
+
+[Output]
+{
+  "detail": "로그인 정보가 일치하지 않습니다."
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[Login] - 비밀번호 틀림
+
+[Input]
+{'username': 'auth', 'password': '12345'}
+
+[Output]
+{
+  "detail": "로그인 정보가 일치하지 않습니다."
+}
+--------------------------------------------------
+
+가입을 하지 않은 ID나 비밀번호가 틀린 경우 모두 '로그인 정보 불일치'로 나타냄
+이를 통해 무차별 ID 대입을 통한 가입 회원 유추 방어 가능
+
+
+--------------------------------------------------
+[Logout] - 정상
+
+[Input]
+없음
+
+[Output]
+{
+  "message": "로그아웃 되었습니다."
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[DELETE-me] - 정상
+
+[Input]
+{'headers': {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzc4Njg0MTk5fQ.ZEF_Y24pcKT6KOnBhvqgJwGWcK5RlMa-pbU3WNOp618'}, 'payload': {'password': '1234'}}
+
+[Output]
+{
+  "message": "회원 탈퇴가 완료되었습니다."
+}
+--------------------------------------------------
+
+==================================================
+
+모닥불(Topic)과 장작(Comment)을 위한 새로운 회원가입 및 로그인
+user_data : 	{'username': 'topic', 'password': '1234', 'nickname': 'feat_topic'}
+token : 	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZXhwIjoxNzc4Njg0MjA2fQ.gSCxp0YEYy2GIzowgpQxPQPyRCapd14S5sICJHBOsBs
+headers : 	{'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZXhwIjoxNzc4Njg0MjA2fQ.gSCxp0YEYy2GIzowgpQxPQPyRCapd14S5sICJHBOsBs'}
+payload : 	{'password': '1234'}
+
+
+--------------------------------------------------
+[create_topic] - 정상
+
+[Input]
+{'content': 'Topic_1'}
+
+[Output]
+{
+  "id": 1,
+  "content": "Topic_1",
+  "expires_at": "2026-05-13T14:56:48.407197Z",
+  "comment_count": 0,
+  "created_at": "2026-05-13T13:56:48.407197Z",
+  "user_id": 2
+}
+--------------------------------------------------
+
+
+--------------------------------------------------
+[create_topic] - 중복 등록
+
+[Input]
+{'content': 'Topic_1'}
+
+[Output]
+{
+  "detail": "이미 같은 내용의 모닥불이 피어있습니다."
+}
+--------------------------------------------------
+
+
+모닥불(topic) 9개 추가 중...
+
+
+모닥불 추가 완료!
+
+
+--------------------------------------------------
+[get_topics] - 10 ~ 6번 topic 조회
+
+[Input]
+{'limit': 5, 'offset': 0}
+
+[Output]
+[
+  {
+    "id": 10,
+    "content": "Topic_10",
+    "expires_at": "2026-05-13T14:57:08.768987Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:08.768987Z",
+    "user_id": 2
+  },
+  {
+    "id": 9,
+    "content": "Topic_9",
+    "expires_at": "2026-05-13T14:57:06.731010Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:06.731010Z",
+    "user_id": 2
+  },
+  {
+    "id": 8,
+    "content": "Topic_8",
+    "expires_at": "2026-05-13T14:57:04.687640Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:04.687640Z",
+    "user_id": 2
+  },
+  {
+    "id": 7,
+    "content": "Topic_7",
+    "expires_at": "2026-05-13T14:57:02.646758Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:02.646758Z",
+    "user_id": 2
+  },
+  {
+    "id": 6,
+    "content": "Topic_6",
+    "expires_at": "2026-05-13T14:57:00.610772Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:00.610772Z",
+    "user_id": 2
+  }
+]
+--------------------------------------------------
+
+
+--------------------------------------------------
+[get_topics] - 7(10-offset) ~ 6번 topic 조회
+
+[Input]
+{'limit': 2, 'offset': 3}
+
+[Output]
+[
+  {
+    "id": 7,
+    "content": "Topic_7",
+    "expires_at": "2026-05-13T14:57:02.646758Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:02.646758Z",
+    "user_id": 2
+  },
+  {
+    "id": 6,
+    "content": "Topic_6",
+    "expires_at": "2026-05-13T14:57:00.610772Z",
+    "comment_count": 0,
+    "created_at": "2026-05-13T13:57:00.610772Z",
+    "user_id": 2
+  }
+]
+--------------------------------------------------
+
+==================================================
+1번 topic에 commment 추가
+
+--------------------------------------------------
+[create_comment] - 정상
+
+[Input]
+{'content': 'Comment_1'}
+
+[Output]
+{
+  "id": 1,
+  "content": "Comment_1",
+  "created_at": "2026-05-13T13:57:16.882080Z",
+  "user_id": 2,
+  "topic_id": 1
+}
+--------------------------------------------------
+
+comment 추가 전 잔여 시간 : 2026-05-13T14:56:48.407197Z
+comment 추가 후 잔여 시간 : 2026-05-13T15:06:48.407197Z
+
+--------------------------------------------------
+
+2번 모닥불(Topic)에 장작(Comment) 7개 추가하며 만료 기한 연장 데이터 수집 중...
+
+
+장작 추가 완료!
+
+모닥불 시간 연장 시간 증감률
+▶ 장작 1개 누적 시: 수명이 +9분 0초 (540초) 연장됨
+▶ 장작 2개 누적 시: 수명이 +9분 0초 (540초) 연장됨
+▶ 장작 3개 누적 시: 수명이 +8분 0초 (480초) 연장됨
+▶ 장작 4개 누적 시: 수명이 +7분 0초 (420초) 연장됨
+▶ 장작 5개 누적 시: 수명이 +6분 0초 (360초) 연장됨
+▶ 장작 6개 누적 시: 수명이 +6분 0초 (360초) 연장됨
+
+--------------------------------------------------
+[get_comments] - 7 ~ 2번 comment 조회
+
+[Input]
+{'limit': 3, 'offset': 0}
+
+[Output]
+{
+  "id": 2,
+  "content": "Topic_2",
+  "expires_at": "2026-05-13T15:51:52.466616Z",
+  "comment_count": 7,
+  "created_at": "2026-05-13T13:56:52.466616Z",
+  "user_id": 2,
+  "comments": [
+    {
+      "id": 8,
+      "content": "Comment_8",
+      "created_at": "2026-05-13T13:57:45.312890Z",
+      "user_id": 2,
+      "topic_id": 2
+    },
+    {
+      "id": 7,
+      "content": "Comment_7",
+      "created_at": "2026-05-13T13:57:41.246226Z",
+      "user_id": 2,
+      "topic_id": 2
+    },
+    {
+      "id": 6,
+      "content": "Comment_6",
+      "created_at": "2026-05-13T13:57:37.184044Z",
+      "user_id": 2,
+      "topic_id": 2
+    }
+  ]
+}
+--------------------------------------------------
+
