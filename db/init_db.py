@@ -107,6 +107,9 @@ def init_db():
     """
     cursor.execute(query)
 
+    # Enable WAL (Write-Ahead Logging) mode persistently for concurrent reads and writes
+    conn.execute("PRAGMA journal_mode = WAL")
+
     conn.commit()
     conn.close()
     print("Database initialized successfully.")
