@@ -37,6 +37,8 @@ def init_db():
             content VARCHAR({settings.TOPIC_LENGTH_MAX}) NOT NULL,
             expires_at DATETIME NOT NULL,
             comment_count INTEGER DEFAULT 0,
+            is_ash INTEGER DEFAULT 0,
+            embedding TEXT,
             created_at DATETIME NOT NULL,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
