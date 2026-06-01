@@ -29,6 +29,7 @@ class Settings:
             self.BASE_MINUTES = float(os.getenv("BASE_MINUTES", 10.0))
             self.DECAY_RATE = float(os.getenv("DECAY_RATE", 0.90))
             self.MAX_LIFESPAN_HOURS = int(os.getenv("MAX_LIFESPAN_HOURS", 24))
+            self.SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", 0.75))
             
             # 4. DB Schema Limits 파싱
             self.USERNAME_LENGTH_MAX = int(os.getenv("USERNAME_LENGTH_MAX", 31))

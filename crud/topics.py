@@ -10,6 +10,8 @@ from core.exceptions import (
         TopicAlreadyExistsException,
  )
 from core.embedding_utils import get_embedding
+from core.config import settings
+from core.similarity import calculate_cosine_similarity
 
 def create_topic(topic_data: TopicCreate, user_id: int) -> dict:
     """ 새로운 모닥불(Topic)을 피우고 DB에 저장합니다.
@@ -70,6 +72,38 @@ def create_topic(topic_data: TopicCreate, user_id: int) -> dict:
 
         # Last INSERTed row id
         new_topic_id = cursor.lastrowid
+
+        # Fetch other active topics that have embeddings
+        cursor.execute("""
+            SELECT id, embedding FROM topics
+            WHERE expires_at > ?
+                AND is_ash = 0
+                AND id != ?
+                AND embedding IS NOT NULL
+        """, (now_iso, new_topic_id))
+        active_topics = cursor.fetchall()
+
+        # Calculate cosine similarity with the new topic's embedding vector
+        similarity_inserts = []
+        for row in active_topics:
+            try:
+                other_vector = json.loads(row["embedding"])
+                similarity = calculate_cosine_similarity(embedding_vector, other_vector)
+                
+                # Check against SIMILARITY_THRESHOLD from config settings
+                if similarity >= settings.SIMILARITY_THRESHOLD:
+                    # Enforce topic_id_1 < topic_id_2 for consistent symmetry
+                    # Since new_topic_id is newly created, it is always greater than row["id"]
+                    similarity_inserts.append((row["id"], new_topic_id, similarity))
+            except (json.JSONDecodeError, ValueError):
+                continue
+
+        # Bulk insert into topic_similarities table if any matches found
+        if similarity_inserts:
+            cursor.executemany("""
+                INSERT OR IGNORE INTO topic_similarities (topic_id_1, topic_id_2, similarity)
+                VALUES (?, ?, ?)
+            """, similarity_inserts)
 
         # Commit changes
         conn.commit()

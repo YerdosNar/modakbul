@@ -6,6 +6,7 @@ from core.similarity import calculate_cosine_similarity
 from core.burn_rate import get_new_expires_at
 from db.connection import get_db_connection
 from datetime import datetime, timezone
+from core.config import settings
 
 def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> dict:
     """ 살아있는 모닥불에 새로운 장작(Comment)을 추가하고 시맨틱 산소 감쇠를 적용하여 수명을 연장합니다.
@@ -61,42 +62,32 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
 
 
         # 3. 시맨틱 산소(Oxygen Factor) 감쇠 계산
-        # 주변 활성 모닥불(만료 이전 is_ash = 0인 다른 모닥불) 목록을 로드하여 코사인 유사도 스캔
-        cursor.execute("""
-            SELECT id, comment_count, embedding
-            FROM topics
-            WHERE expires_at > ?
-                AND is_ash = 0
-                AND id != ?
-                AND embedding IS NOT NULL
-        """, (now.isoformat(), topic_id))
-        active_topics = cursor.fetchall()
-
-        oxygen_topics = cursor.fetchall()
-
-        oxygen_factor = 1.0
+        # topic_similarities 테이블을 활용하여 유사한 주변 모닥불들의 총 댓글 개수(near_comments_sum)를 조회합니다.
+        # 기존의 O(N) 루프 돌며 파이썬단에서 코사인 유사도와 JSON 파싱을 수행하는 병목을 인덱스 조회로 대체합니다.
+        near_comments_sum = 0
         if embedding_raw:
             try:
-                target_vector = json.loads(embedding_raw)
-                near_comments_sum = 0
-
-                for row in active_topics:
-                    try:
-                        vector = json.loads(row["embedding"])
-                        
-                        # 코사인 유사도 연산 수행
-                        similarity = calculate_cosine_similarity(target_vector, vector)
-                        
-                        # 시맨틱 유사 임계값(0.75 이상)을 만족하는 모닥불을 근처 그룹으로 식별
-                        if similarity >= 0.75:
-                            near_comments_sum += row["comment_count"]
-                    except (json.JSONDecodeError, ValueError):
-                        continue
+                cursor.execute("""
+                    SELECT COALESCE(SUM(t.comment_count), 0)
+                    FROM topics t
+                    WHERE t.expires_at > ?
+                        AND t.is_ash = 0
+                        AND t.id != ?
+                        AND t.id IN (
+                            SELECT topic_id_2 FROM topic_similarities WHERE topic_id_1 = ? AND similarity >= ?
+                            UNION
+                            SELECT topic_id_1 FROM topic_similarities WHERE topic_id_2 = ? AND similarity >= ?
+                        )
+                """, (now.isoformat(), topic_id, topic_id, settings.SIMILARITY_THRESHOLD, topic_id, settings.SIMILARITY_THRESHOLD))
                 
-                oxygen_factor = max(0.3, 1.0 - (near_comments_sum * 0.05))
-            
-            except json.JSONDecodeError:
+                row = cursor.fetchone()
+                if row:
+                    near_comments_sum = row[0]
+            except Exception:
+                # 안전한 동작을 위해 예외 발생 시 기본값 0 사용
                 pass
+
+        oxygen_factor = max(0.3, 1.0 - (near_comments_sum * 0.05))
 
         # 최종 수명 연장 만료일 산출 (자연 소멸 모델 적용)
         new_expires_at = get_new_expires_at(created_at, expires_at, comment_count, oxygen_factor)
