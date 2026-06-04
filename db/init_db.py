@@ -61,6 +61,23 @@ def init_db():
     """
     cursor.execute(query)
 
+    # 4. [Topic Similarities] Table
+    query = """
+        CREATE TABLE IF NOT EXISTS topic_similarities (
+            topic_id_1 INTEGER,
+            topic_id_2 INTEGER,
+            similarity REAL NOT NULL,
+            PRIMARY KEY (topic_id_1, topic_id_2),
+            FOREIGN KEY (topic_id_1) REFERENCES topics (id) ON DELETE CASCADE,
+            FOREIGN KEY (topic_id_2) REFERENCES topics (id) ON DELETE CASCADE
+        )
+    """
+    cursor.execute(query)
+
+    # Index for fast filtering of similarity
+    query = "CREATE INDEX IF NOT EXISTS idx_topic_similarities_val ON topic_similarities (similarity)"
+    cursor.execute(query)
+
     conn.commit()
     conn.close()
     print("Database initialized successfully.")
