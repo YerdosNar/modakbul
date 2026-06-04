@@ -13,12 +13,13 @@ def garbage_collect():
     """ 유효 기간이 지난 Topic과 Comment를 DB에서 영구 아카이브 테이블로 이관합니다.
     
     1단계: 만료된 모닥불을 즉시 논리 잠금(is_ash = 1)하여 추가 쓰기/댓글 조회를 전면 차단합니다.
-    2단계: 잘게 쪼갠 청크 단위(BATCH_SIZE = 5)로 아카이브 테이블로 안전하게 물리 이관한 뒤 삭제합니다.
-    청크 이관 사이사이에 50ms의 휴식을 주어 다른 사용자의 쓰기 락 획득 권한을 보장합니다.
+    2단계: 잘게 쪼갠 청크 단위(ARCHIVE_BATCH_SIZE)로 아카이브 테이블로 안전하게 물리 이관한 뒤 삭제합니다.
+    청크 이관 사이사이에 ARCHIVE_THROTTLE_INTERVAL 휴식을 주어 다른 사용자의 쓰기 락 획득 권한을 보장합니다.
     """
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
-    BATCH_SIZE = 5
+    BATCH_SIZE = settings.ARCHIVE_BATCH_SIZE
+    THROTTLE_INTERVAL = settings.ARCHIVE_THROTTLE_INTERVAL
     total_migrated = 0
 
     try:
@@ -69,7 +70,7 @@ def garbage_collect():
                 total_migrated += len(expired_ids)
 
             # 2-3. 잠시 휴식하여 데이터베이스가 다른 사용자의 요청(락)을 처리할 시간을 확보함 (Throttling)
-            time.sleep(0.05)
+            time.sleep(THROTTLE_INTERVAL)
 
         if total_migrated > 0:
             print(f"[GC] Success : {total_migrated}개의 만료된 모닥불과 하위 장작들을 논리 잠금 후 청크 단위로 안전하게 물리 이관 완료하였습니다.")

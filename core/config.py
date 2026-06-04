@@ -39,6 +39,8 @@ class Settings:
 
             # Garbage Collection
             self.GARBAGE_COLLECTION_INTERVAL = int(os.getenv("GARBAGE_COLLECTION_INTERVAL", 3600))
+            self.ARCHIVE_BATCH_SIZE = int(os.getenv("ARCHIVE_BATCH_SIZE", 10))
+            self.ARCHIVE_THROTTLE_INTERVAL = float(os.getenv("ARCHIVE_THROTTLE_INTERVAL", 0.05))
             
         except (ValueError, TypeError):
             raise InvalidVarTypeError("환경 변수 타입 오류: 정수나 실수형 확인 필요")
