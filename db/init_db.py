@@ -78,6 +78,35 @@ def init_db():
     query = "CREATE INDEX IF NOT EXISTS idx_topic_similarities_val ON topic_similarities (similarity)"
     cursor.execute(query)
 
+    # 5. [Ash Topics] Table
+    query = f"""
+        CREATE TABLE IF NOT EXISTS ash_topics (
+            id INTEGER PRIMARY KEY,
+            content VARCHAR({settings.TOPIC_LENGTH_MAX}) NOT NULL,
+            expires_at DATETIME NOT NULL,
+            comment_count INTEGER DEFAULT 0,
+            is_ash INTEGER DEFAULT 1,
+            created_at DATETIME NOT NULL,
+            user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+        )
+    """
+    cursor.execute(query)
+
+    # 6. [Ash Comments] Table
+    query = f"""
+        CREATE TABLE IF NOT EXISTS ash_comments (
+            id INTEGER PRIMARY KEY,
+            content VARCHAR({settings.COMMENT_LENGTH_MAX}) NOT NULL,
+            created_at DATETIME NOT NULL,
+            user_id INTEGER,
+            topic_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
+            FOREIGN KEY (topic_id) REFERENCES ash_topics (id) ON DELETE CASCADE
+        )
+    """
+    cursor.execute(query)
+
     conn.commit()
     conn.close()
     print("Database initialized successfully.")

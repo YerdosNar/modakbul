@@ -129,12 +129,6 @@ def get_active_topics(limit: int = 20, offset: int = 0) -> List[dict]:
         List[dict]: 살아있는 모닥불들의 딕셔너리 리스트. (게시물이 없다면 빈 리스트[] 반환)
 
     """
-
-    """
-    TODO: [?] SYS-05 지연 삭제가 적용된 피드 목록
-    1. SELECT * FROM topics WHERE expires_at > datetime('now') ORDER BY expires_at DESC LIMIT ? OFFSET ?
-    2. 결과를 리스트로 묶어서 리턴
-    """
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -152,15 +146,13 @@ def get_active_topics(limit: int = 20, offset: int = 0) -> List[dict]:
         # fetchall (return emtpy list if nothing found)
         rows = cursor.fetchall()
 
-    # Convert to dict
-    # list comprehension:
     return [dict(row) for row in rows]
 
 
 def get_topic_detail(topic_id: int, limit: int = 20, offset: int = 0) -> Optional[dict]:
     """ 특정 모닥불(Topic)에 대한 상세 정보를 반환합니다.
 
-    재(is_ash = 1)가 된 모닥불이더라도, DB에 존재하는 한 조회가 가능합니다.
+    재(is_ash = 1)가 된 모닥불이거나 이미 아카이빙된 모닥불이더라도 조회가 가능합니다.
     식어가는 과정의 아카이브 감상을 보증하기 위해 상세 조회를 허용합니다.
 
     Args:
@@ -173,59 +165,79 @@ def get_topic_detail(topic_id: int, limit: int = 20, offset: int = 0) -> Optiona
         TopicNotFoundException: 해당 ID의 모닥불이 아예 존재하지 않을 경우 발생
 
     """
-
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        # Find topic by ID
+        # 1. 활성 모닥불 테이블(topics)에서 먼저 조회 시도
         topic_query = "SELECT * FROM topics WHERE id = ?"
         cursor.execute(topic_query, (topic_id, ))
         topic_row = cursor.fetchone()
 
-        # If not found -> ERROR 404
+        is_archived = False
         if topic_row is None:
-            raise TopicNotFoundException()
+            # 2. 활성 테이블에 없으면 아카이브 테이블(ash_topics)에서 조회 시도
+            topic_query = "SELECT * FROM ash_topics WHERE id = ?"
+            cursor.execute(topic_query, (topic_id, ))
+            topic_row = cursor.fetchone()
+            if topic_row is None:
+                raise TopicNotFoundException()
+            is_archived = True
 
-        comment_query = """
-            SELECT * FROM comments
-            WHERE topic_id = ?
-            ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-        """
+        # 3. 알맞은 댓글 테이블(comments 또는 ash_comments)에서 댓글 조회
+        if is_archived:
+            comment_query = """
+                SELECT * FROM ash_comments
+                WHERE topic_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+            """
+        else:
+            comment_query = """
+                SELECT * FROM comments
+                WHERE topic_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+            """
         cursor.execute(comment_query, (topic_id, limit, offset))
         comment_rows = cursor.fetchall()
 
     result = dict(topic_row)
 
-    # 지연 삭제 판정 보정
-    # 스케줄러가 돌지 않아 is_ash = 0이지만 만료된 것은 임시로 is_ash = 1로 강제하여 일관성 제공
-    expires_at = datetime.fromisoformat(result["expires_at"]).replace(tzinfo=timezone.utc)
-    if expires_at <= datetime.now(timezone.utc):
+    # 지연 삭제 및 아카이빙 판정 보정
+    if is_archived:
         result["is_ash"] = 1
+    else:
+        expires_at = datetime.fromisoformat(result["expires_at"]).replace(tzinfo=timezone.utc)
+        if expires_at <= datetime.now(timezone.utc):
+            result["is_ash"] = 1
 
     result["comments"] = [dict(row) for row in comment_rows]
 
     return result
 
+
 def get_ash_topics(limit: int = 20, offset: int = 0) -> List[dict]:
     """ 수명이 다하여 '재(is_ash = 1)'가 된 과거의 모닥불 아카이브 피드를 반환합니다.
+
+    가비지 컬렉터가 백그라운드 청크 단위로 이관 중일 때도 사용자 조회의 데이터 일관성을 위해,
+    이미 아카이빙된 테이블(ash_topics)과 활성 테이블의 논리 잠금 상태(is_ash = 1) 모닥불을 함께 조회합니다.
 
     Args:
         limit (int): 한 번에 반환할 최대 모닥불의 개수 (기본값: 20)
         offset (int): DB에서 건너뛸 데이터의 개수 (페이징용. 예: 20이면 21번째 글부터 조회)
 
     Returns:
-        List[dict]: 살아있는 모닥불들의 딕셔너리 리스트. (게시물이 없다면 빈 리스트[] 반환)
+        List[dict]: 재가 된 모닥불들의 딕셔너리 리스트. (게시물이 없다면 빈 리스트[] 반환)
     """
-
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        # SELECT: (is_ash = 1 OR expires_at <= now_iso)
+        # UNION ALL로 물리적 아카이브 테이블과 활성 테이블의 논리 잠금 상태를 함께 병합 조회
         query = """
-            SELECT *
-            FROM topics
+            SELECT id, content, expires_at, comment_count, is_ash, created_at, user_id FROM ash_topics
+            UNION ALL
+            SELECT id, content, expires_at, comment_count, is_ash, created_at, user_id FROM topics
             WHERE is_ash = 1 OR expires_at <= ?
             ORDER BY expires_at DESC
             LIMIT ? OFFSET ?
