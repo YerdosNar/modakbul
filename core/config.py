@@ -29,6 +29,7 @@ class Settings:
             self.BASE_MINUTES = float(os.getenv("BASE_MINUTES", 10.0))
             self.DECAY_RATE = float(os.getenv("DECAY_RATE", 0.90))
             self.MAX_LIFESPAN_HOURS = int(os.getenv("MAX_LIFESPAN_HOURS", 24))
+            self.SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", 0.75))
             
             # 4. DB Schema Limits 파싱
             self.USERNAME_LENGTH_MAX = int(os.getenv("USERNAME_LENGTH_MAX", 31))
@@ -38,6 +39,8 @@ class Settings:
 
             # Garbage Collection
             self.GARBAGE_COLLECTION_INTERVAL = int(os.getenv("GARBAGE_COLLECTION_INTERVAL", 3600))
+            self.ARCHIVE_BATCH_SIZE = int(os.getenv("ARCHIVE_BATCH_SIZE", 10))
+            self.ARCHIVE_THROTTLE_INTERVAL = float(os.getenv("ARCHIVE_THROTTLE_INTERVAL", 0.05))
             
         except (ValueError, TypeError):
             raise InvalidVarTypeError("환경 변수 타입 오류: 정수나 실수형 확인 필요")

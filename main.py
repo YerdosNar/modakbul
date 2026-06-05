@@ -47,10 +47,10 @@ from core.exceptions import ConfigException
 
 try:
     check_db_connection(settings.DATABASE_URL)
-    print("✅ 서버 가동 준비 완료")
+    print("[SUCCESS] 서버 가동 준비 완료")
 except ConfigException as e:
-    print(f"❌ 가동 실패: {e.detail}")
+    print(f"[FAIL] 가동 실패: {e.detail}")
     sys.exit(1)
 except Exception as e:
-    print(f"❌ 알 수 없는 오류 발생: {str(e)}")
+    print(f"[FAIL] 알 수 없는 오류 발생: {str(e)}")
     sys.exit(1)
