@@ -64,6 +64,26 @@ def read_topic_feed(
     """
     return crud.topics.get_active_topics(limit, offset)
 
+@router.get(
+    "/ashes",
+    response_model=List[TopicResponse],
+    summary="꺼진 모닥불(재) 조회")
+def get_ashes(
+    limit: int = Query(20, ge=1, le=100, description="한 번에 가져올 게시물 수"),
+    offset: int = Query(0, ge=0, description="건너뛸 게시물 수 (페이징용)")
+):
+    """수명이 다하여 재(is_ash = 1) 상태가 된 식어버린 모닥불 피드를 최신순으로 조회합니다.
+
+    Query 파라미터를 통해 무한 스크롤이나 페이징 처리를 지원합니다.
+
+    Args:
+        limit (int): 반환할 최대 게시물 수 (1~100 사이, 기본값 20)
+        offset (int): 건너뛸 데이터의 개수 (기본값 0)
+
+    Returns:
+        List[TopicResponse]: 재가 된 모닥불 정보가 담긴 리스트, 없으면 빈 리스트 반환.
+    """
+    return crud.topics.get_ash_topics(limit, offset)
 
 @router.get(
         "/{topic_id}",
