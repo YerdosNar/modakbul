@@ -15,6 +15,8 @@ class TopicResponse(BaseModel):
     comment_count: int
     created_at: datetime
     user_id: int | None = None
+    is_ash: int = 0
 
 class TopicDetailResponse(TopicResponse):
     comments: List[CommentResponse]
+
