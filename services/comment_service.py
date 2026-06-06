@@ -2,7 +2,7 @@ from core.time_utils import get_now, parse_iso
 from schemas.comments import CommentCreate
 from core.config import settings
 from core.burn_rate import get_new_expires_at
-from core.exceptions import TopicNotFoundException, TopicAlreadyExpiredException, DBIntegrityError
+from core.exceptions import TopicNotFoundException, TopicAlreadyExpiredException, DBIntegrityError, InvalidCommentContentException
 
 import repositories.topic_repository as topic_repo
 import repositories.comment_repository as comment_repo
@@ -24,9 +24,14 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
         dict: 데이터베이스 적재가 완료되어 고유 번호 및 작성 시간이 부여된 댓글 상세 데이터.
 
     Raises:
+        InvalidCommentContentException: 댓글 본문이 비어있거나 너무 길 때 발생합니다.
         TopicNotFoundException: 대상 모닥불을 찾을 수 없거나 데이터베이스 무결성 오류가 발생할 경우 발생합니다.
         TopicAlreadyExpiredException: 모닥불이 이미 재가 되었거나 수명이 만료되었을 때 발생합니다.
     """
+    content = comment_data.content.strip() if comment_data.content else ""
+    if not content or len(content) > settings.COMMENT_LENGTH_MAX:
+        raise InvalidCommentContentException()
+
     topic = topic_repo.get_topic_by_id(topic_id)
     if topic is None:
         raise TopicNotFoundException()
@@ -58,7 +63,7 @@ def create_comment(topic_id: int, comment_data: CommentCreate, user_id: int) -> 
     try:
         return comment_repo.insert_comment_and_update_topic(
             topic_id=topic_id,
-            content=comment_data.content,
+            content=content,
             user_id=user_id,
             now_iso=now.isoformat(),
             new_expires_iso=new_expires_at.isoformat()
