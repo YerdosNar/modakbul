@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+        <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>모닥불</title>
+                <link rel="stylesheet" href="style.css">
+        </head>
+        <body>
+                <header>
+                        <h1>🔥 모닥불</h1>
+                        <div id="user-status">로그인하지 않음</div>
+                </header>
+
+                <main>
+                        <!-- Auth area: login + signup -->
+                        <section id="auth-section">
+                                <h2>로그인 / 회원가입</h2>
+                                <input id="login-username" placeholder="아이디">
+                                <input id="login-password" type="password" placeholder="비밀번호">
+                                <button id="login-btn">로그인</button>
+                                <button id="signup-btn">회원가입</button>
+                        </section>
+
+                        <!-- Create a bonfire -->
+                        <section id="create-section">
+                                <h2>모닥불 피우기</h2>
+                                <input id="topic-content" placeholder="무슨 이야기를 나눌까요?">
+                                <button id="create-topic-btn">생성</button>
+                        </section>
+
+                        <!-- Feed of active bonfires -->
+                        <section id="feed-section">
+                                <h2>살아있는 모닥불</h2>
+                                <button id="refresh-btn">새로고침</button>
+                                <div id="feed-list">아직 불러오지 않았습니다.</div>
+                        </section>
+                </main>
+
+                <script src="app.js"></script>
+        </body>
+</html>
