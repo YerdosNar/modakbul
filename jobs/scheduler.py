@@ -4,8 +4,8 @@ import sqlite3
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from db.connection import get_db_connection
-from datetime import datetime, timedelta, timezone
 from core.config import settings
+from core.time_utils import get_now_iso
 
 interval = settings.GARBAGE_COLLECTION_INTERVAL
 
@@ -16,8 +16,7 @@ def garbage_collect():
     2단계: 잘게 쪼갠 청크 단위(ARCHIVE_BATCH_SIZE)로 아카이브 테이블로 안전하게 물리 이관한 뒤 삭제합니다.
     청크 이관 사이사이에 ARCHIVE_THROTTLE_INTERVAL 휴식을 주어 다른 사용자의 쓰기 락 획득 권한을 보장합니다.
     """
-    now = datetime.now(timezone.utc)
-    now_iso = now.isoformat()
+    now_iso = get_now_iso()
     BATCH_SIZE = settings.ARCHIVE_BATCH_SIZE
     THROTTLE_INTERVAL = settings.ARCHIVE_THROTTLE_INTERVAL
     total_migrated = 0
