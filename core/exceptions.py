@@ -35,6 +35,12 @@ class InvalidCredentialsException(ModakbulException):
     def __init__(self, detail: str = "로그인 정보가 일치하지 않습니다."):
         super().__init__(status_code=401, detail=detail)
 
+class InvalidUserRegistrationException(ModakbulException):
+    """ 회원가입 또는 사용자 정보 양식이 비어있거나 올바르지 않을 때 발생하는 예외 """
+    def __init__(self, detail: str = "아이디, 비밀번호, 닉네임은 비어있거나 너무 길 수 없습니다."):
+        super().__init__(status_code=422, detail=detail)
+
+
 
 # ==============================
 # 모닥불(Topic) Domain Exception

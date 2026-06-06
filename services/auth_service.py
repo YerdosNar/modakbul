@@ -4,10 +4,13 @@ from core.exceptions import (
     NicknameAlreadyExistsException,
     UserNotFoundException,
     InvalidCredentialsException,
-    DBIntegrityError
+    DBIntegrityError,
+    InvalidUserRegistrationException
 )
 from core.security import get_password_hash, verify_password
+from core.config import settings
 import repositories.auth_repository as auth_repo
+
 
 def create_user(username: str, password: str, nickname: str) -> dict:
     """새로운 사용자 가입 처리를 검증 및 진행합니다.
@@ -26,18 +29,27 @@ def create_user(username: str, password: str, nickname: str) -> dict:
         UserAlreadyExistsException: 입력한 username(ID)이 이미 DB에 존재할 경우 발생
     """
 
-    existing_user = auth_repo.find_user_by_username_or_nickname(username, nickname)
+    username_stripped = username.strip() if username else ""
+    nickname_stripped = nickname.strip() if nickname else ""
+    password_stripped = password.strip() if password else ""
+
+    if (not username_stripped or len(username_stripped) > settings.USERNAME_LENGTH_MAX or
+        not nickname_stripped or len(nickname_stripped) > settings.NICKNAME_LENGTH_MAX or
+        not password_stripped):
+        raise InvalidUserRegistrationException()
+
+    existing_user = auth_repo.find_user_by_username_or_nickname(username_stripped, nickname_stripped)
 
     if existing_user:
-        if existing_user['username'] == username:
+        if existing_user['username'] == username_stripped:
             raise UsernameAlreadyExistsException()
         
-        if existing_user['nickname'] == nickname:
+        if existing_user['nickname'] == nickname_stripped:
             raise NicknameAlreadyExistsException()
         
-    hashed_password = get_password_hash(password)
+    hashed_password = get_password_hash(password_stripped)
     try:
-        return auth_repo.create_user(username=username, hashed_password=hashed_password, nickname=nickname)
+        return auth_repo.create_user(username=username_stripped, hashed_password=hashed_password, nickname=nickname_stripped)
     except DBIntegrityError:
         raise UserAlreadyExistsException()
 
@@ -84,6 +96,10 @@ def delete_user(plain_password: str, user_id: int) -> dict:
         UserNotFoundException: 해당 유저가 DB에 없을 때 발생
     
     """
+    password_stripped = plain_password.strip() if plain_password else ""
+    if not password_stripped:
+        raise InvalidUserRegistrationException("비밀번호는 비어있을 수 없습니다.")
+
     hashed_password = auth_repo.get_hashed_password_by_user_id(user_id)
 
     if hashed_password is None:

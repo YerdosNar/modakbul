@@ -6,7 +6,7 @@ from schemas.topics import TopicCreate
 from core.config import settings
 from core.embedding_utils import get_embedding
 from core.similarity import calculate_cosine_similarity
-from core.exceptions import TopicAlreadyExistsException, TopicNotFoundException, DBIntegrityError
+from core.exceptions import TopicAlreadyExistsException, TopicNotFoundException, DBIntegrityError, InvalidTopicContentException
 
 import repositories.topic_repository as topic_repo
 import repositories.comment_repository as comment_repo
@@ -27,22 +27,27 @@ def create_new_topic(topic_data: TopicCreate, user_id: int) -> dict:
         dict: 데이터베이스 적재가 완료되어 식별 ID와 초기 수명이 부여된 모닥불 상세 데이터.
 
     Raises:
+        InvalidTopicContentException: 모닥불의 내용이 비어있거나 너무 길 때 발생합니다.
         TopicAlreadyExistsException: 활성 상태 중 동일한 내용의 모닥불이 이미 존재하거나 
                                      데이터베이스 무결성 오류가 발생할 경우 발생합니다.
     """
+    content = topic_data.content.strip() if topic_data.content else ""
+    if not content or len(content) > settings.TOPIC_LENGTH_MAX:
+        raise InvalidTopicContentException()
+
     now = get_now()
     now_iso = get_now_iso()
     expires_at_iso = add_hours(now, 1).isoformat()
 
-    if topic_repo.check_active_topic_exists(topic_data.content, now_iso):
+    if topic_repo.check_active_topic_exists(content, now_iso):
         raise TopicAlreadyExistsException()
 
-    embedding_vector = get_embedding(topic_data.content)
+    embedding_vector = get_embedding(content)
     embedding_str = json.dumps(embedding_vector)
 
     try:
         new_topic_id = topic_repo.insert_topic(
-            content=topic_data.content,
+            content=content,
             expires_at=expires_at_iso,
             created_at=now_iso,
             user_id=user_id,
