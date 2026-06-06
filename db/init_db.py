@@ -78,6 +78,9 @@ def init_db():
     query = "CREATE INDEX IF NOT EXISTS idx_topic_similarities_val ON topic_similarities (similarity)"
     cursor.execute(query)
 
+    # Index for fast filtering of active topics (expires_at + is_ash)
+    query = "CREATE INDEX IF NOT EXISTS idx_topics_active ON topics (is_ash, expires_at)"
+    cursor.execute(query)
     # 5. [Ash Topics] Table
     query = f"""
         CREATE TABLE IF NOT EXISTS ash_topics (

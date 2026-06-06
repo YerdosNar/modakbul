@@ -1,21 +1,11 @@
-# POST /topics/{id}/comments 등
-
 from fastapi import APIRouter, Depends, status
 from schemas.comments import CommentCreate, CommentResponse
 from api.dependencies import get_current_user
-import crud.comments
-
-# RESTful API 표준에 따라 특정 게시물의 댓글은
-# /topics/{topic_id}/comments 형태로 설계하는 것이 좋음.
+import services.comment_service as comment_service
 
 router = APIRouter(prefix="/topics", tags=["Comments"])
 
-@router.post(
-        "/{topic_id}/comments",
-        response_model=CommentResponse,
-        status_code=status.HTTP_201_CREATED,
-        summary="장작(댓글) 추가 및 모닥불 수명 연장",
-        description="살아있는 모닥불에 장작(댓글)을 추가하여 수명을 연장합니다. (로그인 필수)")
+@router.post("/{topic_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED, summary="장작(댓글) 추가 및 모닥불 수명 연장")
 def add_comment_to_topic(
     topic_id: int,
     comment_data: CommentCreate,
@@ -39,12 +29,4 @@ def add_comment_to_topic(
         TopicNotFoundException: (CRUD 내부 발생) 해당 ID의 모닥불이 아예 없을 때 404 반환
         TopicAlreadyExpiredException: (CRUD 내부 발생) 모닥불이 이미 수명을 다했을 때 403 반환
     """
-
-    """
-    TODO: [?] 장작 추가 엔드포인트 로직 구현
-    1. crud.comments.create_comment(topic_id, comment_data, user_id) 호출
-    (주의 1: 시간 연장 로직은 여기서 짜지 말고 CRUD 쪽 쿼리에 맡겨야 함)
-    (주의 2: 존재하지 않거나 꺼진 모닥불에 대한 예외 처리도 CRUD에서 에러를 던져주므로,
-            try-except 없이 함수 호출 후 그대로 리턴하면 됨.)
-    """
-    return crud.comments.create_comment(topic_id, comment_data, user_id)
+    return comment_service.create_comment(topic_id, comment_data, user_id)

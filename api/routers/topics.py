@@ -1,23 +1,13 @@
-# GET /topics, POST /topics 등
-
 from typing import List
 from fastapi import APIRouter, Depends, Query, status
 from schemas.topics import TopicCreate, TopicResponse, TopicDetailResponse
 from api.dependencies import get_current_user
-import crud.topics
+import services.topic_service as topic_service
 
 router = APIRouter(prefix="/topics", tags=["Topics"])
 
-@router.post(
-        "/",
-        response_model=TopicResponse,
-        status_code=status.HTTP_201_CREATED,
-        summary="모닥불 피우기",
-        description="새로운 주제의 모닥불(게시물)을 생성합니다. (로그인 필수)")
-def create_new_topic(
-    topic_data: TopicCreate,
-    user_id: int = Depends(get_current_user)
-):
+@router.post("/", response_model=TopicResponse, status_code=status.HTTP_201_CREATED, summary="모닥불 피우기")
+def create_new_topic(topic_data: TopicCreate, user_id: int = Depends(get_current_user)):
     """새로운 모닥불을 DB에 생성합니다.
 
     생성된 모닥불은 기본적으로 현재 시간으로부터 1시간의 수명(expires_at)을 부여받습니다.
@@ -29,21 +19,12 @@ def create_new_topic(
     Returns:
         TopicResponse: 생성된 모닥불의 상세 정보 (id, expires_at 등 포함)
     """
+    return topic_service.create_new_topic(topic_data, user_id)
 
-    """
-    TODO: [?] 모닥불 생성 로직 구현
-    1. crud.topics.create_topic(topic_data, user_id 호출 후, 그 반환값을 그대로 리턴)
-    """
-    return crud.topics.create_topic(topic_data, user_id)
-
-
-@router.get(
-        "/",
-        response_model=List[TopicResponse],
-        summary="살아있는 모닥불 피드 조회")
+@router.get("/", response_model=List[TopicResponse], summary="살아있는 모닥불 피드 조회")
 def read_topic_feed(
-    limit: int = Query(20, ge=1, le=100, description="한 번에 가져올 게시물 수"),
-    offset: int = Query(0, ge=0, description="건너뛸 게시물 수 (페이징용)")
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
 ):
     """현재 살아있는(만료되지 않은) 모닥불 피드 목록을 최신순으로 조회합니다.
 
@@ -57,20 +38,12 @@ def read_topic_feed(
     Returns:
         List[TopicResponse]: 모닥불 정보가 담긴 리스트, 없으면 빈 리스트 반환.
     """
+    return topic_service.read_topic_feed(limit, offset)
 
-    """
-    TODO: [?] 피드 조회 로직 구현
-    1. crud.topics.get_active_topics(limit, offset) 호출 후, 그 반환값을 그대로 리턴
-    """
-    return crud.topics.get_active_topics(limit, offset)
-
-@router.get(
-    "/ashes",
-    response_model=List[TopicResponse],
-    summary="꺼진 모닥불(재) 조회")
+@router.get("/ashes", response_model=List[TopicResponse], summary="꺼진 모닥불(재) 조회")
 def get_ashes(
-    limit: int = Query(20, ge=1, le=100, description="한 번에 가져올 게시물 수"),
-    offset: int = Query(0, ge=0, description="건너뛸 게시물 수 (페이징용)")
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
 ):
     """수명이 다하여 재(is_ash = 1) 상태가 된 식어버린 모닥불 피드를 최신순으로 조회합니다.
 
@@ -83,16 +56,13 @@ def get_ashes(
     Returns:
         List[TopicResponse]: 재가 된 모닥불 정보가 담긴 리스트, 없으면 빈 리스트 반환.
     """
-    return crud.topics.get_ash_topics(limit, offset)
+    return topic_service.read_ash_topics_feed(limit, offset)
 
-@router.get(
-        "/{topic_id}",
-        response_model=TopicDetailResponse,
-        summary="특정 모닥불 상세 조회")
+@router.get("/{topic_id}", response_model=TopicDetailResponse, summary="특정 모닥불 상세 조회")
 def get_topic_detail(
-        topic_id: int,
-        limit: int = Query(20, ge=1, le=100, description="한번에 가져올 댓글 수"),
-        offset: int = Query(0, ge=0, description="건너뛸 댓글 수 (페이지용)")
+    topic_id: int,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
 ):
     """특정 모닥불의 상세 내용을 조회합니다.
 
@@ -100,18 +70,13 @@ def get_topic_detail(
 
     Args:
         topic_id (int): 조회할 모닥불의 고유 ID (URL Path)
+        limit (int): 하위 댓글을 조회할 최대 개수 (기본값 20)
+        offset (int): 건너뛸 댓글의 개수 (기본값 0)
 
     Returns:
-        TopicResponse: 해당 모닥불의 상세 정보
+        TopicDetailResponse: 해당 모닥불의 상세 정보 및 댓글 목록
 
     Raises:
-        TopicNotFoundExceptioin: (CRUD 내부 발생) 게시물이 아예 없을 때 404 반환
-        TopicalreadyExpiredException: (CRUD 내부 발생) 게시물이 이미 만료되었을 때 403 반환
+        TopicNotFoundException: 해당 ID의 모닥불이 존재하지 않을 때 404 반환
     """
-
-    """
-    TODO: [?] 모닥불 상세 조회 로직 구현
-    1. crud.topics.get_topic_detail(topic_id) 호출 후, 그 반환값을 그대로 리턴
-    (참고: 만료되거나 없는 게시물에 대한 404/403 에외 처리는 CRUD에서 던지므로 라우터에서는 호출만 하면 됨.)
-    """
-    return crud.topics.get_topic_detail(topic_id, limit, offset)
+    return topic_service.get_topic_detail(topic_id, limit, offset)
