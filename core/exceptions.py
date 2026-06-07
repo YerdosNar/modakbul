@@ -35,6 +35,12 @@ class InvalidCredentialsException(ModakbulException):
     def __init__(self, detail: str = "로그인 정보가 일치하지 않습니다."):
         super().__init__(status_code=401, detail=detail)
 
+class InvalidUserRegistrationException(ModakbulException):
+    """ 회원가입 또는 사용자 정보 양식이 비어있거나 올바르지 않을 때 발생하는 예외 """
+    def __init__(self, detail: str = "아이디, 비밀번호, 닉네임은 비어있거나 너무 길 수 없습니다."):
+        super().__init__(status_code=422, detail=detail)
+
+
 
 # ==============================
 # 모닥불(Topic) Domain Exception
@@ -57,6 +63,7 @@ class InvalidTopicContentException(ModakbulException):
     def __init__(self):
         super().__init__(status_code=422, detail="모닥불의 내용이 비어있거나 너무 깁니다.")
 
+
 # ==============================
 # 장작(Comment) Domain Exception
 # ==============================
@@ -66,7 +73,10 @@ class InvalidCommentContentException(ModakbulException):
         super().__init__(status_code=422, detail="장작의 내용이 비어있거나 너무 깁니다.")
 
 
-# setting
+# ==============================
+# 세팅(Setting) Exception
+# ==============================
+
 class ConfigException(ModakbulException):
     def __init__(self, detail: str = "System Configuration Error"):
         super().__init__(status_code=500, detail=detail)
@@ -82,3 +92,14 @@ class InvalidVarTypeError(ConfigException):
 class ResourceAccessError(ConfigException):
     def __init__(self, message: str = "DB 연결 실패"):
         super().__init__(detail=message)
+
+
+# ==============================
+# 데이터베이스(Database) Exception
+# ==============================
+
+class DBIntegrityError(Exception):
+    """ 데이터베이스 유니크 제약조건 위반 등 무결성 오류 발생 시 던지는 추상 예외 """
+    def __init__(self, message: str = "Database integrity constraint violated"):
+        self.message = message
+        super().__init__(self.message)

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from db.init_db import init_db
-from api.routers import auth, topics, comments
+from api.routers import auth, topics, comments, users
 from jobs.scheduler import scheduler
 
 # Lifespan
@@ -32,6 +32,7 @@ app = FastAPI(
 app.include_router(auth.router, prefix="/api")
 app.include_router(topics.router, prefix="/api")
 app.include_router(comments.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 @app.get("/")
 def root():
@@ -47,10 +48,10 @@ from core.exceptions import ConfigException
 
 try:
     check_db_connection(settings.DATABASE_URL)
-    print("✅ 서버 가동 준비 완료")
+    print("[SUCCESS] 서버 가동 준비 완료")
 except ConfigException as e:
-    print(f"❌ 가동 실패: {e.detail}")
+    print(f"[FAIL] 가동 실패: {e.detail}")
     sys.exit(1)
 except Exception as e:
-    print(f"❌ 알 수 없는 오류 발생: {str(e)}")
+    print(f"[FAIL] 알 수 없는 오류 발생: {str(e)}")
     sys.exit(1)
