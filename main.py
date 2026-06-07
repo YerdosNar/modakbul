@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from db.init_db import init_db
-from api.routers import auth, topics, comments
+from api.routers import auth, topics, comments, users
 from jobs.scheduler import scheduler
 
 # Lifespan
@@ -32,6 +32,7 @@ app = FastAPI(
 app.include_router(auth.router, prefix="/api")
 app.include_router(topics.router, prefix="/api")
 app.include_router(comments.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 @app.get("/")
 def root():
